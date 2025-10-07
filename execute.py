@@ -78,3 +78,34 @@ for virus in SARS:
         
 
 
+
+# Part 2: Find the longest palindrome in each gene sequence. (i.e., identify the index where it occurs)
+
+def manacher(text):
+    text = '#' + '#'.join(text) + '#'
+    e = len(text)
+    P = [0] * e
+    center = limit = 0
+    for i in range(1, e - 1):
+        if i < limit:
+            symmetrical = 2 * center - i
+            P[i] = min(limit - i, P[symmetrical])
+        gap = P[i] + 1
+        while i - gap >= 0 and i + gap < e and text[i - gap] == text[i + gap]:
+            P[i] += 1
+            gap += 1
+        if i + P[i] > limit:
+            limit = i + P[i]
+            center = i
+    max_len = max(P)
+    center_index = P.index(max_len)
+    start = (center_index - max_len) // 2
+    longest_palindrome = text[center_index - max_len:center_index + max_len + 1].replace('#', '')
+    return longest_palindrome
+
+print("\n" + "="*20 + "\n")
+print("\nLongest Palindrome in each gene:")
+for i, gene in enumerate(GENES):
+    print("Gene: " + genes[i])
+    print(manacher(gene))
+
