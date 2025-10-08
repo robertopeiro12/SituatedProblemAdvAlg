@@ -38,7 +38,8 @@ def kmp(text, pattern):
 
 sars = ["SARS-COV-2-MN908947.3.txt","SARS-COV-2-MT106054.1.txt"]
 genes = ["M-gene.txt","S-gene.txt","ORF1AB-gene.txt"]
-
+print("SARS-COV-2-MN908947.3 is Wuhan")
+print("SARS-COV-2-MT106054.1 is Texas")
 SARS = []
 GENES = []
 
@@ -73,11 +74,14 @@ for virus in SARS:
     i+=1
     for gene in GENES:
         print("Gene: "+genes[j])
-        print(kmp(virus,gene))
+        numIndex = kmp(virus,gene)
+        print("Index:", numIndex if numIndex is not None else "None")
+        if numIndex is None:
+            print("First 12 characters: None")
+        else:
+            print("First 12 characters:", virus[numIndex : numIndex + 12])
         j+=1
         
-
-
 
 # Part 2: Find the longest palindrome in each gene sequence. (i.e., identify the index where it occurs)
 
@@ -104,8 +108,64 @@ def manacher(text):
     return longest_palindrome
 
 print("\n" + "="*20 + "\n")
+print("\nPart 2:")
 print("\nLongest Palindrome in each gene:")
 for i, gene in enumerate(GENES):
     print("Gene: " + genes[i])
     print(manacher(gene))
 
+# Part 3: Find in which sections of the virus each protein is produced (i.e., identify the index of the genome where each of the 24 proteins occurs)
+print("\n" + "="*20 + "\n")
+print("\nPart 3:")
+print("\nProteins in sequence:\n")
+amino = {}
+with open("codes.txt", "r") as f:
+    for line in f:
+        line = line.strip()
+        if not line:
+            continue  
+        if ":" in line:
+            key, values = line.split(":", 1)
+        else:
+            continue  
+        key = key.strip() 
+        values = values.strip()
+        values = values.replace(";", ",")
+        codons = [v.strip() for v in values.split(",") if v.strip()]
+        amino[key] = codons
+
+SARS_codons=[]
+for virus in SARS:
+    virus_codons =  [ virus[i:i+3] for i in range(0, len(virus), 3) ]
+    SARS_codons.append(virus_codons)
+
+with open("proteins-seq.txt", "r") as f:
+    lines = f.read().splitlines()
+proteins = []
+current_name = None
+current_seq = ""
+for line in lines:
+    if line.startswith(">"):
+        if current_name and current_seq:
+            proteins.append((current_name, current_seq))
+        current_name = line[1:].strip()
+        current_seq = ""
+    else:
+        current_seq += line.strip()
+if current_name and current_seq:
+    proteins.append((current_name, current_seq))
+
+from itertools import product
+
+def protein_to_codons(protein, amino_dict):
+    codon_lists = [amino_dict[a] for a in protein]
+    for combination in product(*codon_lists):
+        yield "".join(combination)
+
+def find_protein_in_genome(protein, genome, amino_dict):
+    for dna_seq in protein_to_codons(protein, amino_dict):
+        index = genome.find(dna_seq)
+        if index != -1:
+            print(f"{protein} found at {index}–{index+len(dna_seq)}")
+
+#find_protein_in_genome(protein,)
