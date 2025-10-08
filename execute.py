@@ -116,32 +116,39 @@ for i, gene in enumerate(GENES):
 
 # Part 3: Find in which sections of the virus each protein is produced (i.e., identify the index of the genome where each of the 24 proteins occurs)
 print("\n" + "="*20 + "\n")
-print("\nPart 3:")
-print("\nProteins in sequence:\n")
+print("Part 3:\nProteins in sequence:\n")
+
+# Step 1. Build amino dict
 amino = {}
 with open("codes.txt", "r") as f:
     for line in f:
         line = line.strip()
         if not line:
-            continue  
+            continue
         if ":" in line:
             key, values = line.split(":", 1)
-        else:
-            continue  
-        key = key.strip() 
-        values = values.strip()
-        values = values.replace(";", ",")
-        codons = [v.strip() for v in values.split(",") if v.strip()]
-        amino[key] = codons
+            key = key.strip()
+            codons = [v.strip() for v in values.replace(";", ",").split(",") if v.strip()]
+            amino[key] = codons
 
-SARS_codons=[]
+# Step 2. Reverse mapping
+codon_to_amino = {codon: aa for aa, codons in amino.items() for codon in codons}
+
+SARS_codons = []
+
 for virus in SARS:
-    virus_codons =  [ virus[i:i+3] for i in range(0, len(virus), 3) ]
-    SARS_codons.append(virus_codons)
+    virus_codons = [virus[i:i+3] for i in range(0, len(virus), 3)]
+    virus_protein_seq = "".join(codon_to_amino.get(c, "?") for c in virus_codons)
+# Step 3. Translate the virus
 
+
+
+
+# Step 4. Load proteins
+proteins = []
 with open("proteins-seq.txt", "r") as f:
     lines = f.read().splitlines()
-proteins = []
+
 current_name = None
 current_seq = ""
 for line in lines:
@@ -155,17 +162,10 @@ for line in lines:
 if current_name and current_seq:
     proteins.append((current_name, current_seq))
 
-from itertools import product
-
-def protein_to_codons(protein, amino_dict):
-    codon_lists = [amino_dict[a] for a in protein]
-    for combination in product(*codon_lists):
-        yield "".join(combination)
-
-def find_protein_in_genome(protein, genome, amino_dict):
-    for dna_seq in protein_to_codons(protein, amino_dict):
-        index = genome.find(dna_seq)
-        if index != -1:
-            print(f"{protein} found at {index}–{index+len(dna_seq)}")
-
-#find_protein_in_genome(protein,)
+# Step 5. Search for proteins
+for name, seq in proteins:
+    index = virus_protein_seq.find(seq)
+    if index != -1:
+        print(f"{name} found at amino acid index {index} (nucleotide index {index*3})")
+    else:
+        print(f"{name} not found in sequence")
