@@ -131,41 +131,62 @@ with open("codes.txt", "r") as f:
             codons = [v.strip() for v in values.replace(";", ",").split(",") if v.strip()]
             amino[key] = codons
 
-# Step 2. Reverse mapping
-codon_to_amino = {codon: aa for aa, codons in amino.items() for codon in codons}
-
 SARS_codons = []
 
 for virus in SARS:
     virus_codons = [virus[i:i+3] for i in range(0, len(virus), 3)]
-    virus_protein_seq = "".join(codon_to_amino.get(c, "?") for c in virus_codons)
-# Step 3. Translate the virus
+    SARS_codons.append(virus_codons)
 
+virustoproteinwuhan = ""
+virustoproteintexas = ""
+for value in SARS_codons[0]:
+    for key, values in amino.items():
+        if value in values:
+            virustoproteinwuhan+=key
+            break
+for value in SARS_codons[1]:
+    for key, values in amino.items():
+        if value in values:
+            virustoproteintexas+=key
+            break
 
-
-
-# Step 4. Load proteins
-proteins = []
+# Open and read the file
 with open("proteins-seq.txt", "r") as f:
-    lines = f.read().splitlines()
+    lines = f.readlines()
 
-current_name = None
-current_seq = ""
+proteins = {}
+key = None
+value = ""
+
 for line in lines:
-    if line.startswith(">"):
-        if current_name and current_seq:
-            proteins.append((current_name, current_seq))
-        current_name = line[1:].strip()
-        current_seq = ""
+    line = line.strip()
+    if line.startswith(">"): 
+        if key: 
+            proteins[key] = value
+        key = line[1:] 
+        value = "" 
     else:
-        current_seq += line.strip()
-if current_name and current_seq:
-    proteins.append((current_name, current_seq))
+        value += line  
 
-# Step 5. Search for proteins
-for name, seq in proteins:
-    index = virus_protein_seq.find(seq)
-    if index != -1:
-        print(f"{name} found at amino acid index {index} (nucleotide index {index*3})")
+if key:
+    proteins[key] = value
+
+print("Wuhan:\n")
+for key,value in proteins.items():
+    index= kmp(virustoproteinwuhan,proteins[key][:4])
+    if index == None:
+        print(f"{key} not found in the genome")
     else:
-        print(f"{name} not found in sequence")
+        print(f"{key} : {index} - 4 amino: {value[:4]} = XXXX")
+
+
+print("\nTexas:\n")
+
+for key in proteins:
+    index=kmp(virustoproteintexas,proteins[key][:4])
+    if index == None:
+        print(f"{key} not found in the genome")
+    else:
+        print(f"{key} : {index} - 4 amino: {value[:4]} = XXXX")
+
+
