@@ -118,7 +118,7 @@ for i, gene in enumerate(GENES):
 print("\n" + "="*20 + "\n")
 print("Part 3:\nProteins in sequence:\n")
 
-# Step 1. Build amino dict
+#  Build amino dict
 amino = {}
 with open("codes.txt", "r") as f:
     for line in f:
@@ -150,7 +150,7 @@ for value in SARS_codons[1]:
             virustoproteintexas+=key
             break
 
-# Open and read the file
+#  Build protein dict
 with open("proteins-seq.txt", "r") as f:
     lines = f.readlines()
 
@@ -167,9 +167,6 @@ for line in lines:
         value = "" 
     else:
         value += line  
-
-if key:
-    proteins[key] = value
 
 print("Wuhan:\n")
 for key,value in proteins.items():
