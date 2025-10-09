@@ -177,16 +177,16 @@ for key,value in proteins.items():
     if index == None:
         print(f"{key} not found in the genome")
     else:
-        print(f"{key} : {index} - 4 amino: {value[:4]} = XXXX")
+        print(f"{key} : {index} - 4 amino: {value[:4]} = {SARS[0][index:index+12]}")
 
 
 print("\nTexas:\n")
 
-for key in proteins:
+for key,value in proteins.items():
     index=kmp(virustoproteintexas,proteins[key][:4])
     if index == None:
         print(f"{key} not found in the genome")
     else:
-        print(f"{key} : {index} - 4 amino: {value[:4]} = XXXX")
+        print(f"{key} : {index} - 4 amino: {value[:4]} = {SARS[1][index:index+12]}")
 
 
