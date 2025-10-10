@@ -1,9 +1,6 @@
 # Situated Problem in Advanced Algorithms
 # Authors: Roberto Peiro & German Cueto
 
-
-
-
 #Part 1 Find the 3 genes (M-gene, S-gene and ORF1AB-gene) in both sequence 
 # algorithm: KMP 
 
@@ -87,6 +84,9 @@ for filename in genes:
                 gene = gene + c
     GENES.append(gene)
 
+print("\n" + "="*20 + "\n")
+print("\nPart 1:")
+print("\nFind the three genes in the virus sequence:" + "\n")
 # Search for each gene in each virus sequence using KMP algorithm
 virus_idx = 0
 for virus in SARS:
@@ -134,7 +134,7 @@ def manacher(text):
 
 print("\n" + "="*20 + "\n")
 print("\nPart 2:")
-print("\nLongest Palindrome in each gene:")
+print("\n Longest Palindrome in each gene:" + "\n")
 # Find the longest palindrome in each gene sequence
 for idx, gene in enumerate(GENES):
     print("Gene: " + genes[idx])
@@ -261,5 +261,7 @@ def find_codon_differences(seq1, seq2, label1="Wuhan", label2="Texas"):
 # Find and display all codon differences between Wuhan and Texas sequences
 differences = find_codon_differences(wuhan_seq, texas_seq)
 print("\n".join(differences))
+
+
 
 
