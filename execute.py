@@ -35,6 +35,43 @@ def kmp(text, pattern):
 
         if j == len(pattern):
             return i - j
+        
+def Z(text, pattern):
+    n = len(text)
+    m = len(pattern)
+    x = n + m + 1
+
+    # Concatenate pattern + "$" + text
+    # "$" is a delimiter not present in either string
+    C = pattern + "$" + text
+
+    Z = [-1] * x  # Initialize Z array
+    L = 0  # Left boundary of the current Z-box
+    R = 0  # Right boundary of the current Z-box
+
+    # Build the Z-array
+    for i in range(x):
+        if i <= R:
+            k = i - L
+            if Z[k] < R - i + 1:
+                # If the previous Z-box can cover this position
+                Z[i] = Z[k]
+            else:
+                # Otherwise, extend the Z-box further
+                L = i
+                while R < x and C[R - L] == C[R]:
+                    R += 1
+                Z[i] = R - L
+                R -= 1
+        else:
+            # No Z-box covers i, start a new one
+            L = R = i
+            while R < x and C[R - L] == C[R]:
+                R += 1
+            Z[i] = R - L
+            R -= 1
+
+    return Z
 
 sars = ["SARS-COV-2-MN908947.3.txt","SARS-COV-2-MT106054.1.txt"]
 genes = ["M-gene.txt","S-gene.txt","ORF1AB-gene.txt"]
@@ -187,3 +224,56 @@ for key,value in proteins.items():
         print(f"{key} : {index} - 4 amino: {value[:4]} = {SARS[1][index:index+12]}")
 
 
+# Part 4:
+'''
+Compare the genomes: Wuhan, 2019, vs. Texas, 2020 Where are they the same? Different? Do the differences result in different amino acids? Specifically
+
+Identify each index ranges where they differ and
+for each such range in each genome, specify the codon- (3 letter sequences) and amino acid- (corresponding letter) sequences in those ranges
+'''
+
+print("\n" + "="*20 + "\n")
+print("Part 4:\nDifferences between Wuhan and Texas:\n")
+
+
+wuhan = SARS[0]
+texas = SARS[1]
+
+diffs = []
+for i in range(min(len(wuhan), len(texas))):
+    if wuhan[i] != texas[i]:
+        diffs.append(i)
+
+ranges = []
+if diffs:
+    start = diffs[0]
+    prev = diffs[0]
+    for i in diffs[1:]:
+        if i == prev + 1:
+            prev = i
+        else:
+            ranges.append((start, prev))
+            start = i
+            prev = i
+    ranges.append((start, prev))
+
+
+def translate_codon(codon):
+    for aa, codons in amino.items():
+        if codon in codons:
+            return aa
+    return "?"
+
+
+for start, end in ranges:
+    
+    codon_index = (start // 3) * 3
+
+    if codon_index + 3 <= len(wuhan) and codon_index + 3 <= len(texas):
+        w_codon = wuhan[codon_index:codon_index + 3]
+        t_codon = texas[codon_index:codon_index + 3]
+
+        if w_codon != t_codon:
+            w_aa = translate_codon(w_codon)
+            t_aa = translate_codon(t_codon)
+            print(f"Difference in index {codon_index}: Wuhan {w_codon} ({w_aa}) vs Texas {t_codon} ({t_aa})")
