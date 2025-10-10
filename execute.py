@@ -235,45 +235,31 @@ for each such range in each genome, specify the codon- (3 letter sequences) and 
 print("\n" + "="*20 + "\n")
 print("Part 4:\nDifferences between Wuhan and Texas:\n")
 
+wuhan_seq = SARS[0]
+texas_seq = SARS[1]
 
-wuhan = SARS[0]
-texas = SARS[1]
+# --- Build codon-to-amino-acid dictionary ---
+CODON_TO_AA = {}
+for aa, codons in amino.items():
+    for codon in codons:
+        CODON_TO_AA[codon] = aa
 
-diffs = []
-for i in range(min(len(wuhan), len(texas))):
-    if wuhan[i] != texas[i]:
-        diffs.append(i)
-
-ranges = []
-if diffs:
-    start = diffs[0]
-    prev = diffs[0]
-    for i in diffs[1:]:
-        if i == prev + 1:
-            prev = i
-        else:
-            ranges.append((start, prev))
-            start = i
-            prev = i
-    ranges.append((start, prev))
-
-
-def translate_codon(codon):
-    for aa, codons in amino.items():
-        if codon in codons:
-            return aa
-    return "?"
-
-
-for start, end in ranges:
+def find_codon_differences(seq1, seq2, label1="Wuhan", label2="Texas"):
+    diffs = []
+    n_codons = min(len(seq1), len(seq2)) // 3
     
-    codon_index = (start // 3) * 3
+    for i in range(n_codons):
+        codon1 = seq1[i*3:i*3+3]
+        codon2 = seq2[i*3:i*3+3]
+        if codon1 != codon2:
+            aa1 = CODON_TO_AA.get(codon1, "?")
+            aa2 = CODON_TO_AA.get(codon2, "?")
+            diffs.append(
+                f"Difference in index {i*3}: {label1} {codon1} ({aa1}) vs {label2} {codon2} ({aa2})"
+            )
+    return diffs
 
-    if codon_index + 3 <= len(wuhan) and codon_index + 3 <= len(texas):
-        w_codon = wuhan[codon_index:codon_index + 3]
-        t_codon = texas[codon_index:codon_index + 3]
+differences = find_codon_differences(wuhan_seq, texas_seq)
+print("\n".join(differences))
 
-        if w_codon != t_codon:
-            w_aa = translate_codon(w_codon)
-            t_aa = translate_codon(t_codon)
-            print(f"Difference in index {codon_index}: Wuhan {w_codon} ({w_aa}) vs Texas {t_codon} ({t_aa})")
+
