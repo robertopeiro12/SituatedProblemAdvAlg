@@ -1,7 +1,17 @@
+# Situated Problem in Advanced Algorithms
+# Authors: Roberto Peiro & German Cueto
+
+
+
+
 #Part 1 Find the 3 genes (M-gene, S-gene and ORF1AB-gene) in both sequence 
 # algorithm: KMP 
 
 def LPS(pattern):
+    """
+    Compute the Longest Proper Prefix Suffix (LPS) array for KMP algorithm
+    This array is used to skip unnecessary comparisons during pattern matching
+    """
     List = [0] * len(pattern) 
     L = 0  
     R = 1  
@@ -19,6 +29,10 @@ def LPS(pattern):
     return List
 
 def kmp(text, pattern):
+    """
+    Knuth-Morris-Pratt pattern matching algorithm
+    Returns the index of first occurrence of pattern in text, or None if not found
+    """
     i = 0  
     j = 0  
     lps = LPS(pattern)  
@@ -36,52 +50,20 @@ def kmp(text, pattern):
         if j == len(pattern):
             return i - j
         
-def Z(text, pattern):
-    n = len(text)
-    m = len(pattern)
-    x = n + m + 1
 
-    # Concatenate pattern + "$" + text
-    # "$" is a delimiter not present in either string
-    C = pattern + "$" + text
-
-    Z = [-1] * x  # Initialize Z array
-    L = 0  # Left boundary of the current Z-box
-    R = 0  # Right boundary of the current Z-box
-
-    # Build the Z-array
-    for i in range(x):
-        if i <= R:
-            k = i - L
-            if Z[k] < R - i + 1:
-                # If the previous Z-box can cover this position
-                Z[i] = Z[k]
-            else:
-                # Otherwise, extend the Z-box further
-                L = i
-                while R < x and C[R - L] == C[R]:
-                    R += 1
-                Z[i] = R - L
-                R -= 1
-        else:
-            # No Z-box covers i, start a new one
-            L = R = i
-            while R < x and C[R - L] == C[R]:
-                R += 1
-            Z[i] = R - L
-            R -= 1
-
-    return Z
-
+# File names for SARS virus sequences and gene sequences
 sars = ["SARS-COV-2-MN908947.3.txt","SARS-COV-2-MT106054.1.txt"]
 genes = ["M-gene.txt","S-gene.txt","ORF1AB-gene.txt"]
 print("SARS-COV-2-MN908947.3 is Wuhan")
 print("SARS-COV-2-MT106054.1 is Texas")
+
+# Lists to store virus and gene sequences
 SARS = []
 GENES = []
 
-for i in sars:  
-    f = open(i, "r")
+# Read SARS virus sequences from files (skip header line)
+for filename in sars:  
+    f = open(filename, "r")
     lines = f.readlines()
     lines = lines[1:]
     f.close()
@@ -92,10 +74,11 @@ for i in sars:
                 virus = virus + c
     SARS.append(virus)
 
-for i in genes:
-    f = open(i, "r")
+# Read gene sequences from files (skip header line)
+for filename in genes:
+    f = open(filename, "r")
     lines = f.readlines()
-    lines = lines[1:]
+    lines = lines[1:] 
     f.close()
     gene  = ""
     for l in lines:
@@ -104,40 +87,45 @@ for i in genes:
                 gene = gene + c
     GENES.append(gene)
 
-i = 0
+# Search for each gene in each virus sequence using KMP algorithm
+virus_idx = 0
 for virus in SARS:
-    j=0
-    print("Virus: "+sars[i])
-    i+=1
+    gene_idx = 0
+    print("Virus: "+sars[virus_idx])
+    virus_idx += 1
     for gene in GENES:
-        print("Gene: "+genes[j])
+        print("Gene: "+genes[gene_idx])
         numIndex = kmp(virus,gene)
         print("Index:", numIndex if numIndex is not None else "None")
         if numIndex is None:
             print("First 12 characters: None")
         else:
             print("First 12 characters:", virus[numIndex : numIndex + 12])
-        j+=1
+        gene_idx += 1
         
 
 # Part 2: Find the longest palindrome in each gene sequence. (i.e., identify the index where it occurs)
 
 def manacher(text):
-    text = '#' + '#'.join(text) + '#'
+    """
+    Manacher's algorithm to find the longest palindrome in a string
+    Returns the longest palindromic substring
+    """
+    text = '#' + '#'.join(text) + '#'  # Insert separators between characters
     e = len(text)
-    P = [0] * e
+    P = [0] * e  # Array to store palindrome lengths
     center = limit = 0
-    for i in range(1, e - 1):
-        if i < limit:
-            symmetrical = 2 * center - i
-            P[i] = min(limit - i, P[symmetrical])
-        gap = P[i] + 1
-        while i - gap >= 0 and i + gap < e and text[i - gap] == text[i + gap]:
-            P[i] += 1
+    for idx in range(1, e - 1):
+        if idx < limit:
+            symmetrical = 2 * center - idx
+            P[idx] = min(limit - idx, P[symmetrical])
+        gap = P[idx] + 1
+        while idx - gap >= 0 and idx + gap < e and text[idx - gap] == text[idx + gap]:
+            P[idx] += 1
             gap += 1
-        if i + P[i] > limit:
-            limit = i + P[i]
-            center = i
+        if idx + P[idx] > limit:
+            limit = idx + P[idx]
+            center = idx
     max_len = max(P)
     center_index = P.index(max_len)
     start = (center_index - max_len) // 2
@@ -147,15 +135,16 @@ def manacher(text):
 print("\n" + "="*20 + "\n")
 print("\nPart 2:")
 print("\nLongest Palindrome in each gene:")
-for i, gene in enumerate(GENES):
-    print("Gene: " + genes[i])
+# Find the longest palindrome in each gene sequence
+for idx, gene in enumerate(GENES):
+    print("Gene: " + genes[idx])
     print(manacher(gene))
 
 # Part 3: Find in which sections of the virus each protein is produced (i.e., identify the index of the genome where each of the 24 proteins occurs)
 print("\n" + "="*20 + "\n")
 print("Part 3:\nProteins in sequence:\n")
 
-#  Build amino dict
+# Build amino acid to codon mapping dictionary
 amino = {}
 with open("codes.txt", "r") as f:
     for line in f:
@@ -168,26 +157,32 @@ with open("codes.txt", "r") as f:
             codons = [v.strip() for v in values.replace(";", ",").split(",") if v.strip()]
             amino[key] = codons
 
+# Convert virus sequences to codons (groups of 3 nucleotides)
 SARS_codons = []
 
 for virus in SARS:
-    virus_codons = [virus[i:i+3] for i in range(0, len(virus), 3)]
+    virus_codons = [virus[codon_idx:codon_idx+3] for codon_idx in range(0, len(virus), 3)]
     SARS_codons.append(virus_codons)
 
+# Translate virus codons to amino acid sequences
 virustoproteinwuhan = ""
 virustoproteintexas = ""
+
+# Translate Wuhan virus codons to amino acids
 for value in SARS_codons[0]:
     for key, values in amino.items():
         if value in values:
-            virustoproteinwuhan+=key
+            virustoproteinwuhan += key
             break
+
+# Translate Texas virus codons to amino acids
 for value in SARS_codons[1]:
     for key, values in amino.items():
         if value in values:
-            virustoproteintexas+=key
+            virustoproteintexas += key
             break
 
-#  Build protein dict
+# Build protein sequences dictionary from FASTA file
 with open("proteins-seq.txt", "r") as f:
     lines = f.readlines()
 
@@ -195,42 +190,42 @@ proteins = {}
 key = None
 value = ""
 
+# Parse FASTA format file
 for line in lines:
     line = line.strip()
-    if line.startswith(">"): 
+    if line.startswith(">"):  
         if key: 
             proteins[key] = value
-        key = line[1:] 
+        key = line[1:]  
         value = "" 
     else:
         value += line  
 
+# Search for protein sequences in Wuhan virus
 print("Wuhan:\n")
-for key,value in proteins.items():
-    index= kmp(virustoproteinwuhan,proteins[key][:4])
+for key, value in proteins.items():
+    # Search for first 4 amino acids of each protein in translated virus sequence
+    index = kmp(virustoproteinwuhan, proteins[key][:4])
     if index == None:
         print(f"{key} not found in the genome")
     else:
         print(f"{key} : {index} - 4 amino: {value[:4]} = {SARS[0][index:index+12]}")
 
-
+# Search for protein sequences in Texas virus
 print("\nTexas:\n")
-
-for key,value in proteins.items():
-    index=kmp(virustoproteintexas,proteins[key][:4])
+for key, value in proteins.items():
+    index = kmp(virustoproteintexas, proteins[key][:4])
     if index == None:
         print(f"{key} not found in the genome")
     else:
         print(f"{key} : {index} - 4 amino: {value[:4]} = {SARS[1][index:index+12]}")
 
 
-# Part 4:
-'''
-Compare the genomes: Wuhan, 2019, vs. Texas, 2020 Where are they the same? Different? Do the differences result in different amino acids? Specifically
-
-Identify each index ranges where they differ and
-for each such range in each genome, specify the codon- (3 letter sequences) and amino acid- (corresponding letter) sequences in those ranges
-'''
+# Part 4: Compare the genomes: Wuhan, 2019, vs. Texas, 2020 
+# Where are they the same? Different? Do the differences result in different amino acids?
+# Identify each index ranges where they differ and
+# for each such range in each genome, specify the codon- (3 letter sequences) 
+# and amino acid- (corresponding letter) sequences in those ranges
 
 print("\n" + "="*20 + "\n")
 print("Part 4:\nDifferences between Wuhan and Texas:\n")
@@ -238,27 +233,32 @@ print("Part 4:\nDifferences between Wuhan and Texas:\n")
 wuhan_seq = SARS[0]
 texas_seq = SARS[1]
 
-# --- Build codon-to-amino-acid dictionary ---
+# Build codon-to-amino-acid dictionary for reverse lookup
 CODON_TO_AA = {}
 for aa, codons in amino.items():
     for codon in codons:
         CODON_TO_AA[codon] = aa
 
 def find_codon_differences(seq1, seq2, label1="Wuhan", label2="Texas"):
+    """
+    Find differences between two sequences at the codon level
+    Returns a list of differences with their positions and amino acid translations
+    """
     diffs = []
     n_codons = min(len(seq1), len(seq2)) // 3
     
-    for i in range(n_codons):
-        codon1 = seq1[i*3:i*3+3]
-        codon2 = seq2[i*3:i*3+3]
+    for codon_idx in range(n_codons):
+        codon1 = seq1[codon_idx*3:codon_idx*3+3]
+        codon2 = seq2[codon_idx*3:codon_idx*3+3]
         if codon1 != codon2:
             aa1 = CODON_TO_AA.get(codon1, "?")
             aa2 = CODON_TO_AA.get(codon2, "?")
             diffs.append(
-                f"Difference in index {i*3}: {label1} {codon1} ({aa1}) vs {label2} {codon2} ({aa2})"
+                f"Difference in index {codon_idx*3}: {label1} {codon1} ({aa1}) vs {label2} {codon2} ({aa2})"
             )
     return diffs
 
+# Find and display all codon differences between Wuhan and Texas sequences
 differences = find_codon_differences(wuhan_seq, texas_seq)
 print("\n".join(differences))
 
